@@ -193,17 +193,13 @@ pub unsafe fn register_foreign_in_module(
         flags |= PL_FA_NONDETERMINISTIC;
     }
 
-    // an unfortunate need for transmute to make the fli eat the pointer
-    let converted_function_ptr = std::mem::transmute(function_ptr);
+    // Transmute directly to *mut c_void. The parameter type changed from
+    // Option<fn_ptr> to *mut c_void due to our bool→int header rewrite.
+    let fn_ptr_raw: *mut std::ffi::c_void = std::mem::transmute(function_ptr);
     let c_module_ptr = c_module
         .as_ref()
         .map(|m| m.as_ptr())
         .unwrap_or(std::ptr::null_mut());
-
-    // The function pointer parameter changed from Option<fn_ptr> to *mut c_void
-    // in newer SWI-Prolog (due to our bool→int header rewrite affecting bindgen output).
-    // Cast through *mut c_void for compatibility.
-    let fn_ptr_raw: *mut std::ffi::c_void = converted_function_ptr as *mut std::ffi::c_void;
 
     PL_register_foreign_in_module(
         c_module_ptr,
