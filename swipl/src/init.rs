@@ -200,11 +200,16 @@ pub unsafe fn register_foreign_in_module(
         .map(|m| m.as_ptr())
         .unwrap_or(std::ptr::null_mut());
 
+    // The function pointer parameter changed from Option<fn_ptr> to *mut c_void
+    // in newer SWI-Prolog (due to our bool→int header rewrite affecting bindgen output).
+    // Cast through *mut c_void for compatibility.
+    let fn_ptr_raw: *mut std::ffi::c_void = converted_function_ptr as *mut std::ffi::c_void;
+
     PL_register_foreign_in_module(
         c_module_ptr,
         c_name.as_ptr(),
         arity as c_int,
-        Some(converted_function_ptr),
+        fn_ptr_raw,
         flags.try_into().unwrap(),
         c_meta.map(|m| m.as_ptr()).unwrap_or_else(std::ptr::null),
     ) == 1
