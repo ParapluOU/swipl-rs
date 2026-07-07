@@ -96,7 +96,8 @@ pub fn initialize_swipl_with_state(state: &'static [u8]) -> Option<EngineActivat
     // https://www.swi-prolog.org/pldoc/doc_for?object=c(%27PL_set_resource_db_mem%27)
     let result = unsafe { PL_set_resource_db_mem(state.as_ptr(), state.len()) };
 
-    if result != TRUE as i32 {
+    // PL_set_resource_db_mem returns a 1-byte `bool` on SWI-Prolog >= 9.3.
+    if i32::from(result) != TRUE as i32 {
         return None;
     }
 
